@@ -151,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements CameraHelper.Came
         } catch (Exception e) {
             e.printStackTrace();
             Log.e("feisher","异常 : " + e.getMessage());
+
         }
 
     }
