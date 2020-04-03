@@ -27,19 +27,17 @@ public class FastYUVtoRGB {
     public Bitmap convertYUVtoRGB(byte[] yuvData, int width, int height) {
         if (yuvType == null) {
             yuvType = new Type.Builder(rs, Element.U8(rs)).setX(yuvData.length);
-            in = Allocation.createTyped(rs, yuvType.create(), Allocation.USAGE_SCRIPT);
-
             rgbaType = new Type.Builder(rs, Element.RGBA_8888(rs)).setX(width).setY(height);
-            out = Allocation.createTyped(rs, rgbaType.create(), Allocation.USAGE_SCRIPT);
         }
+        in = Allocation.createTyped(rs, yuvType.create(), Allocation.USAGE_SCRIPT);
+        out = Allocation.createTyped(rs, rgbaType.create(), Allocation.USAGE_SCRIPT);
         in.copyFrom(yuvData);
         yuvToRgbIntrinsic.setInput(in);
         yuvToRgbIntrinsic.forEach(out);
         Bitmap bmpout = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-//        Bitmap bmpout = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         out.copyTo(bmpout);
-        Bitmap bmpout2 = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-
+        in.destroy();
+        out.destroy();
         return bmpout;
     }
 

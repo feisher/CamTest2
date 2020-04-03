@@ -57,10 +57,10 @@ public class CameraHelper implements Camera.PreviewCallback {
         }
     }
     int tempOpenCameraTimes = 0;
-    private void openCamera() {
-//        if (mCamera != null) {
-//            return;
-//        }
+    public void openCamera() {
+        if (mCamera != null) {
+            return;
+        }
 
         try {
 //            if (frontCamera) {

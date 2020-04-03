@@ -98,6 +98,14 @@ public class MainActivity extends AppCompatActivity implements CameraHelper.Came
         fastYUVtoRGB = new FastYUVtoRGB(this);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        surfaceView.setVisibility(View.VISIBLE);
+//        mCameraHelper.openCamera();
+
+    }
+
     /**
      * 相机打开成功回调
      *
@@ -129,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements CameraHelper.Came
             Bitmap headBmp = Bitmap.createBitmap(previewSize.height,  previewSize.width, Bitmap.Config.RGB_565);
             ArcSoftImageUtil.imageDataToBitmap(rotateHeadImageData, headBmp, ArcSoftImageFormat.NV21);
             timings.addSplit("解析图片");
-
             bitmap =   createScaleBitmap(headBmp,240,320);
             timings.addSplit("压缩图片");
             //保存文件相关代码
