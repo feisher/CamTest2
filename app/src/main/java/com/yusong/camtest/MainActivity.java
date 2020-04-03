@@ -11,11 +11,11 @@ import android.media.FaceDetector;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.TimingLogger;
 import android.view.SurfaceView;
 
 import com.arcsoft.imageutil.ArcSoftImageFormat;
 import com.arcsoft.imageutil.ArcSoftImageUtil;
-import com.arcsoft.imageutil.ArcSoftImageUtilError;
 import com.arcsoft.imageutil.ArcSoftRotateDegree;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 import com.yusong.ToastUtils;
@@ -119,44 +119,54 @@ public class MainActivity extends AppCompatActivity implements CameraHelper.Came
     @Override
     public void onNV21Data(byte[] nv21, Camera.Size previewSize, int surfaceWidth, int surfaceHeight) {
         try {
-
+            TimingLogger timings = new TimingLogger("TAG", "onNV21Data");
             byte[]  rotateHeadImageData = new byte[nv21.length];
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             //获取到的rotation  = 270
-            int rotateCode = ArcSoftImageUtil.rotateImage(nv21, rotateHeadImageData, previewSize.width, previewSize.height, ArcSoftRotateDegree.DEGREE_270,  ArcSoftImageFormat.NV21);
-            if (rotateCode != ArcSoftImageUtilError.CODE_SUCCESS) {
-                throw new RuntimeException("rotate image failed, code is " + rotateCode);
-            }
+            ArcSoftImageUtil.rotateImage(nv21, rotateHeadImageData, previewSize.width, previewSize.height, ArcSoftRotateDegree.DEGREE_270,  ArcSoftImageFormat.NV21);
+            timings.addSplit("旋转图片");
             //宽高需要互换
             Bitmap headBmp = Bitmap.createBitmap(previewSize.height,  previewSize.width, Bitmap.Config.RGB_565);
-            if (ArcSoftImageUtil.imageDataToBitmap(rotateHeadImageData, headBmp, ArcSoftImageFormat.NV21) != ArcSoftImageUtilError.CODE_SUCCESS) {
-                throw new RuntimeException("failed to transform image data to bitmap");
-            }
-            bitmap = headBmp;
+            ArcSoftImageUtil.imageDataToBitmap(rotateHeadImageData, headBmp, ArcSoftImageFormat.NV21);
+            timings.addSplit("解析图片");
+
+            bitmap =   createScaleBitmap(headBmp,240,320);
+            timings.addSplit("压缩图片");
             //保存文件相关代码
 //            File file = new File(imgDir + File.separator + "1.jpg");
 //            FileOutputStream fosImage = new FileOutputStream(file);
 //            headBmp.compress(Bitmap.CompressFormat.JPEG, 100, fosImage);
 //            fosImage.close();
-
-//            Bitmap bitmap0 = fastYUVtoRGB.convertYUVtoRGB(nv21, previewSize.width, previewSize.height);
-//            bitmap = rotateBitmap(bitmap0,90);
-//            bitmap = nv21ToBitmap(nv21,  previewSize.width, previewSize.height);
-//            MainActivity.bitmap = nv21ToBitmap(nv21,  previewSize.width, previewSize.height, new Rect(0, 0, previewSize.width, previewSize.height));
             FaceDetector.Face[] faces = new FaceDetector.Face[1];
             FaceDetector faceDetector = new FaceDetector(bitmap.getWidth(),  bitmap.getHeight(),1);
+            timings.addSplit("创建解析器");
             faces1 = faceDetector.findFaces(bitmap, faces);
+            timings.addSplit("解析人脸");
             Log.i("feisher","发现人脸数量 : " + faces1);
             boolean b = faces1 > 0;
             ToastUtils.showShort("发现人脸："+b);
             bitmap.recycle();
             System.gc();
+            timings.dumpToLog(); //输出到日志
         } catch (Exception e) {
             e.printStackTrace();
             Log.e("feisher","异常 : " + e.getMessage());
         }
 
     }
+
+    private static Bitmap createScaleBitmap(Bitmap tempBitmap, int desiredWidth, int desiredHeight) {
+        // If necessary, scale down to the maximal acceptable size.
+        if (tempBitmap != null && (tempBitmap.getWidth() > desiredWidth || tempBitmap.getHeight() > desiredHeight)) {
+            // 如果是放大图片，filter决定是否平滑，如果是缩小图片，filter无影响
+            Bitmap bitmap = Bitmap.createScaledBitmap(tempBitmap, desiredWidth, desiredHeight, true);
+            tempBitmap.recycle(); // 释放Bitmap的native像素数组
+            return bitmap;
+        } else {
+            return tempBitmap; // 如果没有缩放，那么不回收
+        }
+    }
+
 
     public static Bitmap nv21ToBitmap(byte[] nv21, int width, int height) {
 //        Bitmap bitmap = null;
