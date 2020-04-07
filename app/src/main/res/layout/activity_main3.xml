@@ -9,4 +9,13 @@
         android:id="@+id/surfaceView"
         android:layout_width="640pt"
         android:layout_height="800pt" />
+    <TextView
+        android:id="@+id/tv_tip"
+        android:textSize="24pt"
+        android:gravity="center"
+        android:textColor="#fff"
+        android:layout_marginBottom="50pt"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 </RelativeLayout>
