@@ -2,12 +2,12 @@ package com.yusong.camtest
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Point
 import android.hardware.Camera
 import android.media.FaceDetector
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.util.TimingLogger
 import android.view.View
 import com.arcsoft.imageutil.ArcSoftImageFormat
 import com.arcsoft.imageutil.ArcSoftImageUtil
@@ -39,7 +39,7 @@ class Main3Activity : AppCompatActivity() {
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true //加载的时候只加载图片的宽高属性，不加载原图
         options.inPreferredConfig = Bitmap.Config.RGB_565
-        options.inSampleSize = 4
+        options.inSampleSize = 2
         options.inDither = true
         options.inJustDecodeBounds = false //取消加载时只加载宽高
 //        val m = Matrix()
@@ -47,7 +47,8 @@ class Main3Activity : AppCompatActivity() {
         val faces = arrayOfNulls<FaceDetector.Face>(1)
 
         irCameraHelper = IrCameraHelper.Builder()
-                .previewViewSize(Point(720, 1280))
+                //todo 改为480x640 图片压缩2 ，抓取速度可以从135ms提升到85ms
+//                .previewViewSize(Point(720, 1280))
                 .rotation(windowManager.defaultDisplay.rotation)
 //                .rotation(0)
                 .specificCameraId(1)
@@ -56,7 +57,7 @@ class Main3Activity : AppCompatActivity() {
                 .cameraListener(object : CameraListener{
                     override fun onPreview(nv21: ByteArray?, camera: Camera?) {
                         try {
-//                            val timings = TimingLogger("TAG", "onNV21Data")
+                            val timings = TimingLogger("TAG", "onNV21Data")
 //                            var nv21ToBitmap = nv21ToBitmap(nv21, 1280, 720)
 //                            var yuvLandscapeToPortrait = yuvLandscapeToPortrait(nv21!!, 1280, 720)
 //                            val nv21ToBitmap = fastYUVtoRGB?.convertYUVtoRGB(yuvLandscapeToPortrait, 720, 1280)
@@ -64,16 +65,18 @@ class Main3Activity : AppCompatActivity() {
                             val rotateHeadImageData = ByteArray(nv21!!.size)
 ////                            val rotation = windowManager.defaultDisplay.rotation
 //                            //获取到的rotation  = 270
-                            ArcSoftImageUtil.rotateImage(nv21, rotateHeadImageData,1280,  720, ArcSoftRotateDegree.DEGREE_270, ArcSoftImageFormat.NV21)
-//                            timings.addSplit("旋转图片")
-                            val headBmp = Bitmap.createBitmap(720, 1280, Bitmap.Config.RGB_565)
+//                            ArcSoftImageUtil.rotateImage(nv21, rotateHeadImageData,1280,  720, ArcSoftRotateDegree.DEGREE_270, ArcSoftImageFormat.NV21)
+                            ArcSoftImageUtil.rotateImage(nv21, rotateHeadImageData,640,  480, ArcSoftRotateDegree.DEGREE_270, ArcSoftImageFormat.NV21)
+                            timings.addSplit("旋转图片")
+//                            val headBmp = Bitmap.createBitmap(720, 1280, Bitmap.Config.RGB_565)
+                            val headBmp = Bitmap.createBitmap(480, 640, Bitmap.Config.RGB_565)
                             var code  = ArcSoftImageUtil.imageDataToBitmap(rotateHeadImageData, headBmp, ArcSoftImageFormat.NV21)
-//                            timings.addSplit("解析图片")
+                            timings.addSplit("解析图片")
                             baos = ByteArrayOutputStream()
                             headBmp?.compress(Bitmap.CompressFormat.JPEG, 80, baos)
                             val toByteArray = baos?.toByteArray()
-                            val bitmap = BitmapFactory.decodeByteArray(toByteArray, 0,toByteArray?.size!!, options)
-//                            timings.addSplit("压缩图片")
+                            bitmap = BitmapFactory.decodeByteArray(toByteArray, 0,toByteArray?.size!!, options)
+                            timings.addSplit("压缩图片")
 //                            bitmap = Bitmap.createBitmap(bmNew, 0, 0, bmNew.width, bmNew.height, m, false)
 //                            timings.addSplit("旋转图片")
 //                            bmNew.recycle()
@@ -81,15 +84,15 @@ class Main3Activity : AppCompatActivity() {
                             baos?.close()
 
                             val faceDetector = FaceDetector(bitmap?.width!!, bitmap?.height!!, 1)
-//                            timings.addSplit("创建解析器")
+                            timings.addSplit("创建解析器")
                             faces1 = faceDetector.findFaces(bitmap, faces)
-//                            timings.addSplit("解析人脸")
+                            timings.addSplit("解析人脸")
                             Log.i("feisher", "发现人脸数量 : $faces1")
 //                            ToastUtils.showShort("发现人脸：$faces1 ")
                             tv_tip.text = "发现人脸：$faces1 "
                             bitmap?.recycle()
 
-//                            timings.dumpToLog() //输出到日志
+                            timings.dumpToLog() //输出到日志
                         } catch (e: java.lang.Exception) {
                             e.printStackTrace()
                             Log.e("feisher", "异常 : " + e.message)

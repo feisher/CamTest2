@@ -93,13 +93,13 @@ public class IrCameraHelper implements Camera.PreviewCallback {
                 parameters.setPreviewFormat(ImageFormat.NV21);
 
                 //预览大小设置
-                previewSize = parameters.getPreviewSize();
-                List<Camera.Size> supportedPreviewSizes = parameters.getSupportedPreviewSizes();
-                if (supportedPreviewSizes != null && supportedPreviewSizes.size() > 0) {
-                    previewSize = getBestSupportedSize(supportedPreviewSizes, previewViewSize);
-                }
-//                previewSize = get480640Size(parameters.getSupportedPreviewSizes());
-                parameters.setPreviewSize(previewSize.width, previewSize.height);
+//                previewSize = parameters.getPreviewSize();
+////                List<Camera.Size> supportedPreviewSizes = parameters.getSupportedPreviewSizes();
+////                if (supportedPreviewSizes != null && supportedPreviewSizes.size() > 0) {
+////                    previewSize = getBestSupportedSize(supportedPreviewSizes, previewViewSize);
+////                }
+                previewSize = get480640Size(parameters.getSupportedPreviewSizes());
+//                parameters.setPreviewSize(previewSize.width, previewSize.height);
 //                parameters.setPreviewSize(720, 1280);
 
                 //对焦模式设置
@@ -150,6 +150,25 @@ public class IrCameraHelper implements Camera.PreviewCallback {
         }
         return bestSize;
     }
+    private Camera.Size get240320Size(List<Camera.Size> sizes) {
+        Camera.Size bestSize = sizes.get(2);
+        for (Camera.Size s : sizes) {
+            if (s.width > bestSize.width && s.height > bestSize.height) {
+                bestSize = s;
+            }
+            if (s.width == 240 && s.height == 320) {
+                bestSize = s;
+                break;
+            }
+
+            if (s.width == 320 && s.height == 240) {
+                bestSize = s;
+                break;
+            }
+        }
+        return bestSize;
+    }
+
 
     public int getCameraOri(int rotation) {
         int degrees = rotation * 90;
